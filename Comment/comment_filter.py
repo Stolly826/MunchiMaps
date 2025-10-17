@@ -6,16 +6,24 @@ If issues are found it will print a message with the explanation
 '''
 def filter(banned_words, comment):
     comment_words = comment.split()
-    check_banned_words(banned_words, comment)
-    check_multiple_links(comment, comment_words)
-    check_repeats(comment, comment_words)
-    check_length(comment, comment_words)
+    if (check_banned_words(banned_words, comment) == False):
+        return False
+    if (check_multiple_links(comment, comment_words) == False):
+        return False
+    if (check_repeats(comment, comment_words) == False):
+        return False
+    if (check_length(comment, comment_words) == False):
+        return False
+    return True
+    
 
 # Detects comments with bad words. 
 def check_banned_words(banned_words, comment):
     for word in banned_words:
         if re.search(word, comment, re.IGNORECASE):
             print("BAD COMMENT (USED BANNED WORDS): " + comment)
+            return False
+    return True
 
 # Detects multiple links inside of a comment
 def check_multiple_links(comment, comment_words):
@@ -24,7 +32,9 @@ def check_multiple_links(comment, comment_words):
         if (re.search("www.", word, re.IGNORECASE) ):
             link_count += 1
         if (link_count == 2):
-            print("BAD COMMENT (MULTIPLE LINKS): " + comment)  
+            print("BAD COMMENT (MULTIPLE LINKS): " + comment)
+            return False  
+    return True
 
 # Detects excessively repeated words (comment is > 10 words and more than 40% of them are the same)  
 def check_repeats(comment, comment_words):
@@ -37,14 +47,18 @@ def check_repeats(comment, comment_words):
                     cur_repeats += 1
             if cur_repeats > comment_words.len * .4:
                 print("BAD COMMENT (EXCESSIVELY REPEATED WORDS): " + comment)
-                return
+                return False
+    return True
 
 # Detects if a comment is > 1000 words or empty
 def check_length(comment, comment_words):
     if comment_words.len > 1000:
         print("BAD COMMENT (AIN'T NO WAY YOU GOT THAT MUCH TO SAY ABOUT A VENDING MACHINE): " + comment)
+        return False
     if comment_words.len == 0:
         print("BAD COMMENT (EMPTY): " + comment)
+        return False
+    return True
 
 def load(filename):
     with open(filename, 'r') as f:
