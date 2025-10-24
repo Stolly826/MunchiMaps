@@ -61,7 +61,7 @@ def append_to_file(filepath, content_to_add):
 def log_comment(text, location, rating, month, day, year, hour, minute):
     '''
     format:
-    __location__
+    __location__: __location_name__
     __start__
     __when__: date and time
     __rating__: (int from 0 to 5)
@@ -80,17 +80,49 @@ def log_comment(text, location, rating, month, day, year, hour, minute):
     we could also make this a part of the comment filter to make sure it is not)
     '''
     banned_words = load('banned_words.txt')
+
+    location_label = "__location__: " + "__" + location + "__"
+    label_with_comment = location_label + "\n__start__\n"
+    label_with_comment += "__when__: " + str(month) + '.' + str(day) + '.' + str(year) + " " + str(hour) + ":" + str(minute) +'\n'
+    label_with_comment += "__rating__: " + str(rating) + "\n"
+    label_with_comment += "__text__: " + text + '\n' + "__end__\n"
+
     if (comment_filter.filter(banned_words, text)):
-        location_label = "__" + location + "__"
         if (is_text_in_file("comment_log.txt", location_label)):
-            label_with_comment = location_label + "\n__start__\n"
-            # ADD DATE
-            label_with_comment += "__rating__:" + str(rating) + "\n"
-            label_with_comment += text
-
             replace_text_in_file("comment_log.txt", location_label, label_with_comment)
+        else:
+            append_to_file("comment_log.txt", label_with_comment)
     else:
-        replace_text_in_file("comment_log.txt", location_label, label_with_comment)
+        replace_text_in_file("comment_log.txt", "__location__: __FILTERED__", label_with_comment)
 
-# Example usage:
-# replace_text_in_file("my_document.txt", "old_word", "new_word")
+def average_rating(location):
+    file_path = "comment_log.txt" 
+
+    try:
+        with open(file_path, 'r') as file:
+            this_location = False
+            total = 0
+            num = 0
+            # add up the total ratings and then divide by the number of ratings found
+            for line_number, line in enumerate(file, 1):
+                if (line.strip() == "__location__: " + "__" + location + "__"):
+                    this_location = True
+                elif ("__location__" in line and this_location):
+                    this_location = False
+                    break
+                elif (this_location):
+                    if ("__rating__" in line):
+                        pieces = line.split()
+                        # -1 implies there was no rating
+                        if (int(pieces[1]) != -1):
+                            total += int(pieces[1])
+                            num += 1
+            if (num == 0):
+                return -1
+            else:
+                return total / num
+
+    except FileNotFoundError:
+        print(f"Error: The file '{file_path}' was not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
